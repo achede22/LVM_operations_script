@@ -1,4 +1,4 @@
-# LVM_script.sh
+# LVM_operations
 Create, Format, Mount, Extend and Reduce LVM partitions with a Shell Script
 
 HD 2018
