@@ -4,21 +4,31 @@ Create, Format, Mount, Extend and Reduce LVM partitions with a Shell Script
 HD 2018
 
 # Valid options are:
---vgextend: Extend Volume Groups
+--vgextend: Extend Volume Groups.
+
 --lvcreate: Create Logical Volumes, format and mount it.
+
 --lvextend: Extend mounted swap, xfs or ext4 Logcal Volumes.
+
 --swapfile: Mount an existing Logical Volume as SWAP.
+
 
 Reduce swap, xfs or ext4 Logical Volume feature is under development and rarely needed.
 
  
 # LVM Reminder 
  VOLUME GROUP NAME: Name of the volumegroup associate. For Example VolGroup001, vgroot.
+ 
  LVM NAME: Logical Volume Group name. For example root, var_log, LogicalVolume01.
+ 
  MOUNT POINT: Mountpoint for the existing and or future mountpoint.
+ 
  SIZE: Size for the new or existing filesystem. Value on Gigabytes
+ 
  DEVICE: Physical device to be added. Examples should be /dev/xvdf /dev/xvdf1.
+ 
  SWAP FILE PATH: Swap File path.
+ 
  
 *This guide is just to explain the expected user inputs to the script, in order to make it run as expected. you can find this questions in any selected option.*
 
