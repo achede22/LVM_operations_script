@@ -117,7 +117,7 @@ printf "\n $mag Creating Dump path in $DUMPPATH $end"
 
 
 if [ ! -d "$DUMPPATH" ]; then
-  mkdir $DUMPPATH && printf "\n $mag Creating Dump path in $DUMPPATH $end"
+  mkdir -p $DUMPPATH && printf "\n $mag Creating Dump path in $DUMPPATH $end"
 fi
 
 DUMMPATH=$("$DUMPPATH"/"$VOLUMENAME"_FILESYSTEM_DUMP_`date +%F`.dump)
@@ -389,7 +389,7 @@ mountpoint(){
         printf "should be an empty folder that starts and ends with / :  "
     read MOUNTPOINT 
     
-    ls $MOUNTPOINT || mkdir -v $MOUNTPOINT ## only create the folder if it does not exist. 
+    ls $MOUNTPOINT || mkdir -p $MOUNTPOINT ## only create the folder if it does not exist. 
         
              printf "\n The Volume $DEV  will be formatted as XFS and all the data inside will be lost. \n "
             are_you_sure
@@ -414,7 +414,7 @@ mountpoint(){
         printf "should be an empty folder that starts and ends with / :  "
     read MOUNTPOINT 
     
-    ls $MOUNTPOINT || mkdir -v $MOUNTPOINT ## only create the folder if it does not exist. 
+    ls $MOUNTPOINT || mkdir -p $MOUNTPOINT ## only create the folder if it does not exist. 
         
              printf "\n The Volume $DEV  will be formatted as EXT4 and all the data inside will be lost!!. \n "
             are_you_sure
