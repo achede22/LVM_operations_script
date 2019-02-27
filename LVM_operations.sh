@@ -274,7 +274,7 @@ check_vg_free_space()
 LVcreate(){
 
 
-        printf "\n $cyn Please select the pertition type to create [ ext4 / xfs / swap ] \n "
+        printf "\n $cyn Please select the partition type to create [ ext4 / xfs / swap ] \n "
     read -p "\n For swap you can also use the option --swapfile : $end" TYPE
     
     echo $TYPE | grep -E 'ext4|xfs|swap' || printf " $yel Please insert a valid option $end \n " 
