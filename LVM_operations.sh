@@ -1,6 +1,4 @@
 #!/bin/bash
-#!/bin/sh
-
 
 #Hernán De León
 
@@ -23,54 +21,48 @@ end=$'\e[0m'
 
 LVreduce(){
 
-  printf " $cyn The actual FREE space inside $VOLUMEGROUP is:  $end"
-   vgs --units m | grep $VOLUMEGROUP | awk '{print $7}'
+    printf " $cyn The actual FREE space inside $VOLUMEGROUP is:  $end"
+    vgs --units m | grep $VOLUMEGROUP | awk '{print $7}'
    
-   printf "\n\n $cyn Available Logical Volumes inside $VOLUMEGROUP are: \n $end"
+    printf "\n\n $cyn Available Logical Volumes inside $VOLUMEGROUP are: \n $end"
    
-  printf "LV       LSize\n"
-  lvs | grep $VOLUMEGROUP | awk {'print $1 "    " $4'}
+    printf "LV       LSize\n"
+    lvs | grep $VOLUMEGROUP | awk {'print $1 "    " $4'}
   
-  
-  printf "\n $cyn Insert the LV Name: $end "
-  read VOLUMENAME
+    printf "\n $cyn Insert the LV Name: $end "
+    read VOLUMENAME
 
-  
   #check if Volume Name exist
     lvdisplay | grep 'LV Name' | grep $VOLUMENAME || clear
-        lvdisplay | grep 'LV Name' | grep $VOLUMENAME || printf "\n\nLogical Volume does not exist inside $VOLUMEGROUP, please put another name:  \n\n\n\n" 
-        lvdisplay | grep 'LV Name' | grep $VOLUMENAME || LVreduce
+    lvdisplay | grep 'LV Name' | grep $VOLUMENAME || printf "\n\nLogical Volume does not exist inside $VOLUMEGROUP, please put another name:  \n\n\n\n" 
+    lvdisplay | grep 'LV Name' | grep $VOLUMENAME || LVreduce
         
-USED=$(df -h | grep $VOLUMENAME | awk '{print $3}')
-AVAILABLE=$(df -h | grep $VOLUMENAME | awk '{print $4}')
- 
-  
+    USED=$(df -h | grep $VOLUMENAME | awk '{print $3}')
+    AVAILABLE=$(df -h | grep $VOLUMENAME | awk '{print $4}')
+   
   ###
+ 
+    #LOGICAL VOLUME PATH = /dev/VolumeGroup/Volumename
+    DEV="/dev/$VOLUMEGROUP/$VOLUMENAME"
   
-  #LOGICAL VOLUME PATH = /dev/VolumeGroup/Volumename
-  DEV="/dev/$VOLUMEGROUP/$VOLUMENAME"
+    # equivale a 
+    #DEVICE MAPPER LV PATH = /dev/mapper/VolumeGroup-Volumename 
+    DEV_MAP="/dev/mapper/$VOLUMEGROUP-$VOLUMENAME"
   
-  # equivale a 
+    #PHYSICAL DEVICE PATH = /dev/mapper/VolumeGroup-Volumename 
+    # PV_DEV=$(/dev/sdb1) 
   
-   #DEVICE MAPPER LV PATH = /dev/mapper/VolumeGroup-Volumename 
-  DEV_MAP="/dev/mapper/$VOLUMEGROUP-$VOLUMENAME"
+    clear
   
-  #PHYSICAL DEVICE PATH = /dev/mapper/VolumeGroup-Volumename 
-  # PV_DEV=$(/dev/sdb1) 
-  
-  clear
-  
-    # exit if the device is not mounted
-         
+    # exit if the device is not mounted  
         mount | grep $VOLUMENAME || printf "$red \n\n The selcted device is not mounted." &&
         mount | grep $VOLUMENAME || printf "$red Please MOUNT $VOLUMENAME before run this script \n\n." &&
         lsblk | grep $VOLUMENAME | grep SWAP || mount | grep $VOLUMENAME || exit 0 
         clear
         
-###### GET THE PARTITION TYPE ! SWAP - EXT4 - XFS 
-#swap or no swap
-lsblk | grep $VOLUMENAME | grep SWAP && TYPE="swap"
-
+    ###### GET THE PARTITION TYPE ! SWAP - EXT4 - XFS 
+    #swap or no swap
+    lsblk | grep $VOLUMENAME | grep SWAP && TYPE="swap"
 
     if [[ "$TYPE" = "swap" ]]; then
         clear
@@ -81,6 +73,7 @@ lsblk | grep $VOLUMENAME | grep SWAP && TYPE="swap"
             $blu m $end or $blu G $end : "   
             read NEWSIZE
     else   
+        
         # GET MOUNT POINT
         MOUNTPOINT=$(df | grep "$VOLUMENAME" | awk '{print $6}')
         
@@ -96,35 +89,30 @@ lsblk | grep $VOLUMENAME | grep SWAP && TYPE="swap"
             read NEWSIZE
     fi
    
-
-    
  #    check required size 
  #    if [ $USED -gt $NEWSIZE ]; then
  #       echo "The final scope $NEWSIZE is smaller than $USED, that is acctually used by $VOLUMENAME "
  #       LVreduce
  #   fi   
 
-
 }
 
 
-## Generate dump from existing filesystem
-generate_dump(){
 
-##################################################install required
+generate_dump(){ 
+    ## Generate dump from existing filesystem
 
-printf "\n $mag Creating Dump path in $DUMPPATH $end"
+    ##################################################install required
 
+    printf "\n $mag Creating Dump path in $DUMPPATH $end"
 
-if [ ! -d "$DUMPPATH" ]; then
-  mkdir -p $DUMPPATH && printf "\n $mag Creating Dump path in $DUMPPATH $end"
-fi
+    if [ ! -d "$DUMPPATH" ]; then
+      mkdir -p $DUMPPATH && printf "\n $mag Creating Dump path in $DUMPPATH $end"
+    fi
 
-DUMMPATH=$("$DUMPPATH"/"$VOLUMENAME"_FILESYSTEM_DUMP_`date +%F`.dump)
+    DUMMPATH=$("$DUMPPATH"/"$VOLUMENAME"_FILESYSTEM_DUMP_`date +%F`.dump)
 
-printf "The mount point of $VOLUMENAME is $MOUNTPOINT "
-
-
+    printf "The mount point of $VOLUMENAME is $MOUNTPOINT "
 
   #ext4 - xfs health check
    if [[ "$TYPE" = "ext4" ]]; then
@@ -142,7 +130,7 @@ printf "The mount point of $VOLUMENAME is $MOUNTPOINT "
                 exit 1
                 fi
                 
-           dump -0uf $DUMPPATH $DEV_MAP
+                dump -0uf $DUMPPATH $DEV_MAP
       
                 if [ $? -eq 0 ]; then
                 echo "$grn Succesful dump generated  at "$DUMPPATH"/"$VOLUMENAME"_FILESYSTEM_DUMP.dump $end"
@@ -181,9 +169,9 @@ printf "The mount point of $VOLUMENAME is $MOUNTPOINT "
    
  }
 
-## Umount current filesystem
+
 resize_force_umount(){
- 
+ ## Umount current filesystem
     
   printf "\n $yel The used space in $VOLUMENAME is $USED Used and the size scope is $NEWSIZE \n"
 
@@ -197,20 +185,19 @@ resize_force_umount(){
    
   
   printf " $yel We are about to umount, reduce and mount the $VOLUMENAME in $MOUNTPOINT $end \n "
-are_you_sure
+    are_you_sure
 
-
- fuser -ck $MOUNTPOINT && >/dev/null 2>&1 
- umount $MOUNTPOINT >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-   printf "$grn Succesful umount $end \n\n"
-  else
-   printf "$red Unsuccesful umount.\n"
-   printf " trying to remount the $VOLUMENAME in $MOUNTPOINT $end "
-   mount $DEV $MOUNTPOINT  #To try to remount if issue
-   df | grep $DEV_MAP | awk '{print $6}' &&  printf "$grn Succesfully Re-mounted $end \n\n"
-   exit 1 
-  fi
+    fuser -ck $MOUNTPOINT && >/dev/null 2>&1 
+    umount $MOUNTPOINT >/dev/null 2>&1
+     if [ $? -eq 0 ]; then
+      printf "$grn Succesful umount $end \n\n"
+     else
+      printf "$red Unsuccesful umount.\n"
+      printf " trying to remount the $VOLUMENAME in $MOUNTPOINT $end "
+      mount $DEV $MOUNTPOINT  #To try to remount if issue
+      df | grep $DEV_MAP | awk '{print $6}' &&  printf "$grn Succesfully Re-mounted $end \n\n"
+      exit 1 
+     fi
 }
 
 ## Destroy previous filesystem
@@ -226,13 +213,12 @@ are_you_sure
 
 ## Check that there-s enought space free on the volumegrup previous to create any new per requirement
 
-
 LVreduce2(){
 
-            # mountpoint
-                printf "The used space in $VOLUMENAME is $USED and the Available is $AVAILABLE \n"
+    # mountpoint
+    printf "The used space in $VOLUMENAME is $USED and the Available is $AVAILABLE \n"
                 
-                  #ext4 - xfs health check
+    #ext4 - xfs health check
    if [[ "$TYPE" = "ext4" ]]; then
        fsck -f $DEV || printf "$red The device selected has errors.\n $end" && exit 1
    else  if [[ "$TYPE" = "xfs" ]]; then
@@ -265,32 +251,27 @@ check_vg_free_space()
             vgdisplay | grep $VOLUMEGROUP >/dev/null 2>&1 || check_vg_free_space  
         
         # if VG Name is ok 
-            FREEVG=$(vgdisplay --noheadings --columns $VOLUMEGROUP |awk '{print $7}') 
-        
-        
+            FREEVG=$(vgdisplay --noheadings --columns $VOLUMEGROUP |awk '{print $7}')    
     }
 
 ## Create lvm 
 LVcreate(){
 
-
-        printf "\n $cyn Please select the partition type to create [ ext4 / xfs / swap ] \n "
+    printf "\n $cyn Please select the partition type to create [ ext4 / xfs / swap ] \n "
     read -p "\n For swap you can also use the option --swapfile : $end" TYPE
     
     echo $TYPE | grep -E 'ext4|xfs|swap' || printf " $yel Please insert a valid option $end \n " 
     echo $TYPE | grep -E 'ext4|xfs|swap' || LVcreate
-    
       
-  printf "$yel The actual FREE space inside $VOLUMEGROUP is: $end "
+    printf "$yel The actual FREE space inside $VOLUMEGROUP is: $end "
     vgs --units m | grep $VOLUMEGROUP | awk '{print $7}'
    
-  printf "\nAvailable Logical Volumes inside $VOLUMEGROUP are: \n"
-  printf "LV    LSize\n"
-  lvs | grep $VOLUMEGROUP | awk {'print $1 "    " $4'}
+    printf "\nAvailable Logical Volumes inside $VOLUMEGROUP are: \n"
+    printf "LV    LSize\n"
+    lvs | grep $VOLUMEGROUP | awk {'print $1 "    " $4'}
   
-  
-  printf "\n$cyn Insert the required Logical Volume Name: $end "
-  read VOLUMENAME
+    printf "\n$cyn Insert the required Logical Volume Name: $end "
+    read VOLUMENAME
 
     # if $VOLMENAME already exist in LVcreate and lvextend
         if [[ "$STEP" = "lvextend" ]]; then
@@ -312,19 +293,16 @@ LVcreate(){
   
   ###
   
-  #LOGICAL VOLUME PATH = /dev/VolumeGroup/Volumename
-  DEV="/dev/$VOLUMEGROUP/$VOLUMENAME"
+    #LOGICAL VOLUME PATH = /dev/VolumeGroup/Volumename
+    DEV="/dev/$VOLUMEGROUP/$VOLUMENAME"
+    
+    # equivale a 
+     #DEVICE MAPPER LV PATH = /dev/mapper/VolumeGroup-Volumename 
+    DEV_MAP="/dev/mapper/$VOLUMEGROUP-$VOLUMENAME"
+    
+    #PHYSICAL DEVICE PATH = /dev/mapper/VolumeGroup-Volumename 
+    # PV_DEV=$(/dev/sdb1) 
   
-  # equivale a 
-  
-   #DEVICE MAPPER LV PATH = /dev/mapper/VolumeGroup-Volumename 
-  DEV_MAP="/dev/mapper/$VOLUMEGROUP-$VOLUMENAME"
-  
-  #PHYSICAL DEVICE PATH = /dev/mapper/VolumeGroup-Volumename 
-  # PV_DEV=$(/dev/sdb1) 
-  
- 
- 
         # for CREATE SWAP option  --createswap  
     if [[ "$TYPE" = "swap" ]]; then
         echo ""
@@ -347,51 +325,46 @@ LVcreate(){
 
    
 
-## Restore lvm data
+
 cleandumps(){
- cat $DUMPPATH/FILESYSTEM_DUMP.dump | xfsrestore -J - $MOUNTPOINT >/dev/null 2>&1
- if [ $? -eq 0 ]; then
-  echo "Dump restore succesful"
-  rm -rf $DUMPPATH/FILESYSTEM_DUMP.dump
- else
-  echo "Dump generation incorrect"
- fi
+    ## Restore lvm data
+
+    cat $DUMPPATH/FILESYSTEM_DUMP.dump | xfsrestore -J - $MOUNTPOINT >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Dump restore succesful"
+        rm -rf $DUMPPATH/FILESYSTEM_DUMP.dump
+    else
+        echo "Dump generation incorrect"
+    fi
 }
 
-## mount point 
+
 mountpoint(){
     
-       if [[ "$STEP" = "lvreduce" ]]; then
-      
+    if [[ "$STEP" = "lvreduce" ]]; then 
             are_you_sure
-
-              mount $DEV $MOUNTPOINT >/dev/null 2>&1
+            mount $DEV $MOUNTPOINT >/dev/null 2>&1
         if [ $? -ne 0 ]; then
           echo "$grn Failed to mount $VOLUMENAME in $MOUNTPOINT $end"
           exit 1
-          else
-      
-           
+        else   
            "\n $grn Logical Filesystem $VOLUMENAME has been succesfully re-mounted in $MOUNTPOINT \n $end "
-           
-           
-           fi 
-    
+        fi 
     fi 
         
    
     # for ext4 LVcreate option 
     if [[ "$TYPE" = "xfs" ]]; then
         printf "\n We are about to MOUNT this $VOLUMENAME, "
-    are_you_sure
+        are_you_sure
     
         printf "\n Insert a new or existing Mount Point \n "
         printf "should be an empty folder that starts and ends with / :  "
-    read MOUNTPOINT 
+        read MOUNTPOINT 
     
-    ls $MOUNTPOINT || mkdir -p $MOUNTPOINT ## only create the folder if it does not exist. 
+        ls $MOUNTPOINT || mkdir -p $MOUNTPOINT ## only create the folder if it does not exist. 
         
-             printf "\n The Volume $DEV  will be formatted as XFS and all the data inside will be lost. \n "
+            printf "\n The Volume $DEV  will be formatted as XFS and all the data inside will be lost. \n "
             are_you_sure
 
             mkfs.xfs $DEV &&
@@ -408,19 +381,20 @@ mountpoint(){
         # for xfs LVcreate option 
     if [[ "$TYPE" = "ext4" ]]; then
         printf "\n We are about to MOUNT this $VOLUMENAME, "
-    are_you_sure
+        are_you_sure
     
         printf "\n Insert a new or existing Mount Point \n "
         printf "should be an empty folder that starts and ends with / :  "
-    read MOUNTPOINT 
+        read MOUNTPOINT 
     
-    ls $MOUNTPOINT || mkdir -p $MOUNTPOINT ## only create the folder if it does not exist. 
-        
-             printf "\n The Volume $DEV  will be formatted as EXT4 and all the data inside will be lost!!. \n "
-            are_you_sure
+        ls $MOUNTPOINT || mkdir -p $MOUNTPOINT ## only create the folder if it does not exist. 
+    
+        printf "\n The Volume $DEV  will be formatted as EXT4 and all the data inside will be lost!!. \n "
+        are_you_sure
 
-            mkfs.ext4 $DEV &&
-            mount $DEV $MOUNTPOINT >/dev/null 2>&1
+        mkfs.ext4 $DEV &&
+        mount $DEV $MOUNTPOINT >/dev/null 2>&1
+        
         if [ $? -ne 0 ]; then
           echo "Failed to mount $VOLUMENAME in $MOUNTPOINT"
           exit 1
@@ -428,14 +402,10 @@ mountpoint(){
     printf "\n Logical Filesystem $VOLUMENAME has been Mounted in $MOUNTPOINT \n "
     fi 
     
-    
-    
-    
         # for LVcreate and SWAP option  
     if [[ "$TYPE" = "swap" ]]; then
              printf "\n The Volume $DEV will be formatted as SWAP and all the data inside will be lost. \n "
             are_you_sure
-
             mkswap $DEV &&
             
 #            echo "$DEV swap swap defaults 0 0  #added by script" >> /etc/fstab
@@ -455,7 +425,7 @@ mountpoint(){
     
 }
 
-#are you sure ?
+
 are_you_sure()
 {
     y=0
@@ -491,13 +461,10 @@ case "$OPTION" in
             check_vg_free_space
             LVcreate
             mountpoint 
-            lsblk | grep $VOLUMENAME 
-               
+            lsblk | grep $VOLUMENAME                
     ;;
      
 
-     
-  
   --vgextend)
     clear
     echo -en "\e[1m resize provided VolumeGroup with the selected space \033[0m\n"
@@ -506,8 +473,7 @@ case "$OPTION" in
     
     lsblk | grep part | grep -v sda
         printf "\n Please select an empty lvm device to join it into the Volume Group $VOLUMEGROUP : "
-        read DEVICE
-        
+        read DEVICE   
         printf "\n Old "
         vgdisplay | grep "VG Size"
         echo ""
